@@ -57,6 +57,16 @@ MERGE_FILE=/workspace/data/gpt2-merges.txt                # merge 文件
 DATA_PATH=/workspace/data/my-gpt2_text_document           # 训练数据路径
 mkdir -p $CHECKPOINT_PATH
 
+#  等待主节点启动
+if [[ "$NODE_RANK" != "0" ]]; then
+    echo "🕐 当前是从节点 (NODE_RANK=$NODE_RANK)，正在等待主节点 ($MASTER_ADDR:$MASTER_PORT) 启动..."
+    while ! nc -z $MASTER_ADDR $MASTER_PORT; do
+        echo "🔄 主节点未就绪，5秒后重试..."
+        sleep 5
+    done
+    echo "✅ 主节点端口已开放，继续启动训练。"
+fi
+
 # 分布式训练参数
 DISTRIBUTED_ARGS="\
     --nproc_per_node $GPUS_PER_NODE \        # 每个节点使用的GPU数
