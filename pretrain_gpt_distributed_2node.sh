@@ -24,14 +24,17 @@ fi
 
 sleep 1
 
+export NCCL_BLOCKING_WAIT=1
+export NCCL_ASYNC_ERROR_HANDLING=1
 export NCCL_IB_DISABLE=1
-export NCCL_DEBUG=INFO
+#export NCCL_DEBUG=INFO
 export NCCL_PORT_RANGE=50000-51000
 export NCCL_SOCKET_IFNAME=eno1
 export CUDA_DEVICE_MAX_CONNECTIONS=1
+#export NCCL_DEBUG_SUBSYS=ALL
 
 # 主节点的 IP 地址
-MASTER_ADDR=203.91.121.252  # 主节点的 IP 地址
+MASTER_ADDR=203.91.121.251  # 主节点的 IP 地址
 MASTER_PORT=2345
 
 # 设置每台机器上的 GPU 数量
@@ -65,8 +68,8 @@ DISTRIBUTED_ARGS="\
 
 # GPT训练参数
 GPT_ARGS="\
-    --num-layers 12 \
-    --hidden-size 512 \
+    --num-layers 4 \
+    --hidden-size 256 \
     --num-attention-heads 8 \
     --seq-length 1024 \
     --max-position-embeddings 1024 \
@@ -81,8 +84,8 @@ GPT_ARGS="\
     --lr-warmup-fraction .01 \
     --clip-grad 1.0 \
     --fp16 \
-    --tensor-model-parallel-size 2 \
-    --pipeline-model-parallel-size 2 \
+    --tensor-model-parallel-size 4 \
+    --pipeline-model-parallel-size 1 \
 "
 
 # 数据相关参数
@@ -109,4 +112,4 @@ torchrun $DISTRIBUTED_ARGS /workspace/megatron-lm-custom/pretrain_gpt.py \
     $OUTPUT_ARGS \
     --distributed-backend nccl \
     --save $CHECKPOINT_PATH \
-    --load $CHECKPOINT_PATH
+#    --load $CHECKPOINT_PATH
