@@ -1,5 +1,33 @@
 #!/bin/bash
 
+PORT=2345
+echo "🔍 检查端口 $PORT 是否被占用..."
+
+PID_LIST=$(lsof -t -i :$PORT)
+
+if [ -n "$PID_LIST" ]; then
+    echo "⚠️ 端口 $PORT 已被以下进程占用：$PID_LIST"
+    echo "⛔ 尝试自动杀掉这些进程..."
+
+    for pid in $PID_LIST; do
+        pname=$(ps -p $pid -o comm=)
+        if [[ "$pname" == "torchrun" || "$pname" == "python" ]]; then
+            echo "✅ 正在终止进程 $pid ($pname)"
+            kill -9 $pid
+        else
+            echo "⚠️ 进程 $pid ($pname) 非 torchrun/python，不自动结束，请手动处理！"
+        fi
+    done
+else
+    echo "✅ 端口 $PORT 未被占用。"
+fi
+
+sleep 1
+
+export NCCL_IB_DISABLE=1
+export NCCL_DEBUG=INFO
+export NCCL_PORT_RANGE=50000-51000
+export NCCL_SOCKET_IFNAME=eno1
 export CUDA_DEVICE_MAX_CONNECTIONS=1
 
 # 主节点的 IP 地址
